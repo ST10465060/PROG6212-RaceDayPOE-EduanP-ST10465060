@@ -87,7 +87,7 @@ The script is idempotent and may be re-run repeatedly from a clean state.
 
 ## Video Demonstration
 
-[RaceDay Part 1 walkthrough (unlisted)](PASTE_YOUR_YOUTUBE_LINK_HERE)
+[RaceDay Part 1 walkthrough (unlisted)]([PASTE_YOUR_YOUTUBE_LINK_HERE](https://youtu.be/snwTFKWFB7E))
 
 The recording covers the ERD and its relationships, a walkthrough of the API
 endpoint plan, a live execution of the database script in SSMS, and the commit
