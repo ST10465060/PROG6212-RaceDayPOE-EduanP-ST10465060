@@ -156,3 +156,11 @@ VALUES
  (2,'01:58:46',112);
 GO
 
+/* ---- Verification queries for the video demo ---- */
+SELECT u.FirstName + ' ' + u.LastName AS Participant, e.EventName, c.CategoryName, en.Status
+FROM Enrolments en
+JOIN Users u      ON u.UserId = en.ParticipantId
+JOIN Categories c ON c.CategoryId = en.CategoryId
+JOIN Events e     ON e.EventId = c.EventId
+ORDER BY e.EventDate;
+GO
