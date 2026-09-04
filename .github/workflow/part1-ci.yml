@@ -1,0 +1,54 @@
+name: Part 1 - Documentation Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify /docs folder exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error::The /docs folder is missing."
+            exit 1
+          fi
+          echo "docs folder found."
+
+      - name: Verify required planning documents
+        run: |
+          missing=0
+          for file in "docs/RaceDay_ERD.pdf" "docs/RaceDay_API_Endpoint_Plan.pdf" "docs/RaceDay_Database.sql"; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Missing required file: $file"
+              missing=1
+            else
+              echo "Found $file"
+            fi
+          done
+          exit $missing
+
+      - name: Verify SQL script contains required statements
+        run: |
+          grep -qi "CREATE TABLE" docs/RaceDay_Database.sql || { echo "::error::No CREATE TABLE statements found."; exit 1; }
+          grep -qi "INSERT INTO" docs/RaceDay_Database.sql || { echo "::error::No seed data found."; exit 1; }
+          echo "SQL script contains table definitions and seed data."
+
+      - name: Verify README has been completed
+        run: |
+          grep -qi "youtube" README.md || { echo "::error::README is missing the YouTube demonstration link."; exit 1; }
+          echo "README validation passed."
+
+  summary:
+    needs: validate-docs
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All Part 1 deliverables are present. Build green."
