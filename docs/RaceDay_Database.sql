@@ -111,3 +111,48 @@ GO
 USE RaceDayDB;
 GO
 
+/* ================= SEED DATA ================= */
+INSERT INTO Roles (RoleName) VALUES ('Organiser'), ('Participant');
+
+INSERT INTO Users (FirstName, LastName, Email, PasswordHash, PhoneNumber, DateOfBirth, RoleId)
+VALUES
+ ('Nomsa','Dlamini','nomsa.dlamini@raceday.co.za','SEEDED_HASH_PLACEHOLDER_01','0821234567','1988-04-12',1),
+ ('Pieter','van Wyk','pieter.vanwyk@raceday.co.za','SEEDED_HASH_PLACEHOLDER_02','0837654321','1985-09-30',1),
+ ('Thandi','Mokoena','thandi.mokoena@gmail.com',   'SEEDED_HASH_PLACEHOLDER_03','0731112223','1997-01-22',2),
+ ('Ryan','Naidoo','ryan.naidoo@gmail.com',         'SEEDED_HASH_PLACEHOLDER_04','0794445556','1994-11-05',2);
+
+INSERT INTO Venues (VenueName, City, Province, Capacity)
+VALUES
+ ('Green Point Athletics Track','Cape Town','Western Cape', 5000),
+ ('Zoo Lake Park','Johannesburg','Gauteng', 3500),
+ ('Golden Mile Promenade','Durban','KwaZulu-Natal', 8000);
+
+INSERT INTO Events (EventName, Description, EventDate, VenueId, OrganiserId, Status)
+VALUES
+ ('Cape Town Summer Series','Coastal road race with three distances.','2026-11-14',1,1,'Open'),
+ ('Joburg City Night Run','Evening run through the northern suburbs.','2026-10-03',2,1,'Open'),
+ ('Durban Beachfront Challenge','Flat, fast promenade course.','2026-12-05',3,2,'Open');
+
+INSERT INTO Categories (EventId, CategoryName, DistanceKm, EntryFee, MaxParticipants)
+VALUES
+ (1,'5km Fun Run',  5.00, 120.00, 800),
+ (1,'10km Road',   10.00, 180.00, 600),
+ (1,'21.1km Half', 21.10, 320.00, 400),
+ (2,'5km Night Dash', 5.00, 100.00, 500),
+ (2,'10km Night Run',10.00, 160.00, 500),
+ (3,'10km Promenade',10.00, 150.00, 700),
+ (3,'21.1km Half',   21.10, 300.00, 350);
+
+INSERT INTO Enrolments (CategoryId, ParticipantId, RaceNumber, Status)
+VALUES
+ (2,3,'A1042','Confirmed'),
+ (3,4,'A2118','Confirmed'),
+ (4,3,'N0071','Confirmed'),
+ (6,4,'D3390','Pending');
+
+INSERT INTO Results (EnrolmentId, FinishTime, Position)
+VALUES
+ (1,'00:52:14', 37),
+ (2,'01:58:46',112);
+GO
+
