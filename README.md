@@ -1,8 +1,7 @@
 # RaceDay – Event Management System
 **PROG6212 Portfolio of Evidence – Part 1**
-Student: Eduan P
+Student: Eduan Pretorius
 Student Number: ST10465060
-Repository: https://github.com/ST10465060/PROG6212-RaceDayPOE-EduanP-ST10465060
 
 ## Contents
 - [System Overview](#system-overview)
