@@ -12,6 +12,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Seed the development database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<RaceDayDbContext>();
+    DbSeeder.Seed(context);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
