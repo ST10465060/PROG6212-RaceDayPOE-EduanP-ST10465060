@@ -1,0 +1,8 @@
+.vs/
+*.user
+*.suo
+bin/
+obj/
+*.mdf
+*.ldf
+*.log
