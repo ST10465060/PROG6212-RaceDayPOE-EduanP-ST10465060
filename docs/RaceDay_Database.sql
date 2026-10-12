@@ -56,14 +56,18 @@ CREATE TABLE Events (
     EventId     INT IDENTITY(1,1) PRIMARY KEY,
     EventName   NVARCHAR(120) NOT NULL,
     Description NVARCHAR(500) NULL,
-    EventDate   DATE          NOT NULL,
-    VenueId     INT           NOT NULL,
+    EventDate       DATE NOT NULL,
+    DistanceKm      DECIMAL(5,2) NOT NULL,
+    EventType       NVARCHAR(10) NOT NULL,
+    VenueId         INT NOT NULL,
     OrganiserId INT           NOT NULL,
     Status      NVARCHAR(20)  NOT NULL DEFAULT 'Open',
     CreatedAt   DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Events_Venues     FOREIGN KEY (VenueId)     REFERENCES Venues(VenueId),
     CONSTRAINT FK_Events_Organiser  FOREIGN KEY (OrganiserId) REFERENCES Users(UserId),
-    CONSTRAINT CK_Events_Status CHECK (Status IN ('Draft','Open','Closed','Completed','Cancelled'))
+    CONSTRAINT CK_Events_Status CHECK (Status IN ('Draft','Open','Closed','Completed','Cancelled')),
+    CONSTRAINT CK_Events_Distance CHECK (DistanceKm > 0),
+    CONSTRAINT CK_Events_Type CHECK (EventType IN ('Run','Walk','Cycle'))
 );
 GO
 
@@ -127,11 +131,11 @@ VALUES
  ('Zoo Lake Park','Johannesburg','Gauteng', 3500),
  ('Golden Mile Promenade','Durban','KwaZulu-Natal', 8000);
 
-INSERT INTO Events (EventName, Description, EventDate, VenueId, OrganiserId, Status)
+INSERT INTO Events (EventName, Description, EventDate, DistanceKm, EventType, VenueId, OrganiserId, Status)
 VALUES
- ('Cape Town Summer Series','Coastal road race with three distances.','2026-11-14',1,1,'Open'),
- ('Joburg City Night Run','Evening run through the northern suburbs.','2026-10-03',2,1,'Open'),
- ('Durban Beachfront Challenge','Flat, fast promenade course.','2026-12-05',3,2,'Open');
+('Cape Town Summer Series','Coastal road race with three distances.','2026-11-14',21.10,'Run',1,1,'Open'),
+('Joburg City Night Run','Evening run through the northern suburbs.','2026-10-03',10.00,'Run',2,1,'Open'),
+('Durban Beachfront Challenge','Flat, fast promenade course.','2026-12-05',21.10,'Run',3,2,'Open');
 
 INSERT INTO Categories (EventId, CategoryName, DistanceKm, EntryFee, MaxParticipants)
 VALUES
