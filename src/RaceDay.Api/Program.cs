@@ -1,4 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using RaceDay.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<RaceDayDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb")));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
