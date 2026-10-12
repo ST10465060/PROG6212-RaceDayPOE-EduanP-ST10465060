@@ -1,0 +1,22 @@
+﻿using System.Collections.Generic;
+
+namespace RaceDay.Contracts.Events;
+
+public class EventDetailDto
+{
+    public int EventId { get; set; }
+    public string EventName { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateOnly EventDate { get; set; }
+    public decimal DistanceKm { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+
+    public string VenueName { get; set; } = string.Empty;
+    public string? City { get; set; }
+    public string? Province { get; set; }
+
+    public string OrganiserName { get; set; } = string.Empty;
+
+    public List<CategoryDto> Categories { get; set; } = new();
+}
