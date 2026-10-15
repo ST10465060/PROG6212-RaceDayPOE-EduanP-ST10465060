@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
+using RaceDay.Api.Models;
 using RaceDay.Contracts.Events;
 
 namespace RaceDay.Api.Controllers;
@@ -106,5 +107,72 @@ public class EventsController : ControllerBase
         }
 
         return Ok(raceEvent);
+    }
+    /// <summary>
+    /// Creates a new event. The venue and organiser must already exist,
+    /// and the organiser must hold the Organiser role.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<EventDetailDto>> CreateEvent(
+        [FromBody] CreateEventRequest request)
+    {
+        // The event may not be scheduled in the past
+        if (request.EventDate < DateOnly.FromDateTime(DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(request.EventDate),
+                "The event date may not be in the past.");
+            return ValidationProblem(ModelState);
+        }
+
+        var venueExists = await _context.Venues
+            .AnyAsync(v => v.VenueId == request.VenueId);
+
+        if (!venueExists)
+        {
+            ModelState.AddModelError(nameof(request.VenueId),
+                $"No venue was found with ID {request.VenueId}.");
+            return ValidationProblem(ModelState);
+        }
+
+        var organiser = await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == request.OrganiserId);
+
+        if (organiser is null)
+        {
+            ModelState.AddModelError(nameof(request.OrganiserId),
+                $"No user was found with ID {request.OrganiserId}.");
+            return ValidationProblem(ModelState);
+        }
+
+        // Only an organiser may own an event
+        if (organiser.Role != "Organiser")
+        {
+            ModelState.AddModelError(nameof(request.OrganiserId),
+                "The selected user does not have the Organiser role.");
+            return ValidationProblem(ModelState);
+        }
+
+        var raceEvent = new Event
+        {
+            EventName = request.EventName.Trim(),
+            Description = request.Description?.Trim(),
+            EventDate = request.EventDate,
+            DistanceKm = request.DistanceKm,
+            EventType = request.EventType,
+            VenueId = request.VenueId,
+            OrganiserId = request.OrganiserId,
+            Status = "Draft"
+        };
+
+        _context.Events.Add(raceEvent);
+        await _context.SaveChangesAsync();
+
+        // 201 with a Location header pointing at the new resource
+        return CreatedAtAction(
+            nameof(GetEvent),
+            new { id = raceEvent.EventId },
+            new { raceEvent.EventId, raceEvent.EventName });
     }
 }
