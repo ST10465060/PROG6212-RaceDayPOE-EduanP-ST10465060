@@ -93,4 +93,82 @@ public class CategoriesController : ControllerBase
 
         return Ok(category);
     }
+
+    /// <summary>
+    /// Creates a new category inside the given event.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<CategoryDto>> CreateCategory(
+        int eventId,
+        [FromBody] CreateCategoryRequest request)
+    {
+        // Load the parent event. We need the OrganiserId from it, so a plain
+        // AnyAsync check is not enough here.
+        var parentEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.EventId == eventId);
+
+        if (parentEvent is null)
+        {
+            return NotFound(new { message = $"No event was found with ID {eventId}." });
+        }
+
+        // Ownership check. Only the organiser who owns the event may add categories to it. 
+        // This mirrors the rule already enforced on update and delete, so the whole resource behaves consistently.
+        if (parentEvent.OrganiserId != request.OrganiserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "Only the organiser who owns this event may add categories to it."
+            });
+        }
+
+        // Duplicate guard. Two races called "Fun Run" in the same event would be impossible to tell apart on an entry form, so we block it.
+        // The comparison is case-insensitive because "fun run" and "Fun Run"
+        var nameTaken = await _context.Categories
+            .AnyAsync(c => c.EventId == eventId
+                        && c.CategoryName.ToLower() == request.CategoryName.ToLower());
+
+        if (nameTaken)
+        {
+            return Conflict(new
+            {
+                message = $"This event already has a category named '{request.CategoryName}'."
+            });
+        }
+
+        // Map the contract onto the entity.
+        var category = new Category
+        {
+            EventId = eventId,
+            CategoryName = request.CategoryName,
+            DistanceKm = request.DistanceKm,
+            EntryFee = request.EntryFee,
+            MaxParticipants = request.MaxParticipants
+        };
+
+        _context.Categories.Add(category);
+        await _context.SaveChangesAsync();
+
+        // Build the response from the saved entity. A brand new category has no entrants yet, so EnrolledCount is zero and every space is free.
+        var dto = new CategoryDto
+        {
+            CategoryId = category.CategoryId,
+            CategoryName = category.CategoryName,
+            DistanceKm = category.DistanceKm,
+            EntryFee = category.EntryFee,
+            MaxParticipants = category.MaxParticipants,
+            EnrolledCount = 0,
+            SpacesRemaining = category.MaxParticipants
+        };
+
+        // CreatedAtRoute returns 201 and adds a Location header pointing at the new resource, which is the correct REST response for a create.
+        return CreatedAtRoute("GetCategory",
+            new { eventId = eventId, categoryId = category.CategoryId },
+            dto);
+    } 
 }
