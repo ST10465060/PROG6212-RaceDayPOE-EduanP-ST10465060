@@ -1,0 +1,55 @@
+name: Part 2 - Build and Validate API
+
+on:
+  push:
+    branches: [ part-2 ]
+  pull_request:
+    branches: [ part-2, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Pin the SDK to the version the project targets. Letting the runner
+      # pick its own default is how a build passes locally and fails here.
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Warnings are left as warnings deliberately. Treating them as errors
+      # would fail the build on cosmetic issues and hide real breakages.
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      # A quick structural check that both projects are actually present,
+      # in case a folder is renamed or left uncommitted by mistake.
+      - name: Verify project structure
+        run: |
+          for proj in "src/RaceDay.Api" "src/RaceDay.Contracts"; do
+            if [ ! -d "$proj" ]; then
+              echo "::error::Missing project folder: $proj"
+              exit 1
+            fi
+            echo "Found $proj"
+          done
+
+      - name: Verify README documents the Part 2 API
+        run: |
+          grep -qi "Part 2" README.md || { echo "::error::README is missing the Part 2 section."; exit 1; }
+          grep -qi "api/Categories" README.md || { echo "::error::README does not document the Category endpoints."; exit 1; }
+          echo "README validation passed."
+
+  summary:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Part 2 API builds successfully. Build green."
