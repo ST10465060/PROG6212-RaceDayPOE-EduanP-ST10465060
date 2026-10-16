@@ -236,4 +236,54 @@ public class EventsController : ControllerBase
 
         return NoContent();
     }
+    /// <summary>
+    /// Deletes an event. Only the owning organiser may delete it, and an
+    /// event that already has participants enrolled may not be removed.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteEvent(
+        int id,
+        [FromQuery] int organiserId)
+    {
+        // Include the categories and their enrolments so we can check whether
+        // anybody has entered this event before we remove it.
+        var raceEvent = await _context.Events
+            .Include(e => e.Categories)
+                .ThenInclude(c => c.Enrolments)
+            .FirstOrDefaultAsync(e => e.EventId == id);
+
+        if (raceEvent is null)
+        {
+            return NotFound(new { message = $"No event was found with ID {id}." });
+        }
+
+        // Ownership check, same rule as the update endpoint
+        if (raceEvent.OrganiserId != organiserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "Only the organiser who created this event may delete it." });
+        }
+
+        // Business rule: an event that people have entered cannot simply vanish.
+        // 409 Conflict means the request is valid, but the current state of the
+        // resource does not allow it.
+        var hasEnrolments = raceEvent.Categories.Any(c => c.Enrolments.Count > 0);
+        if (hasEnrolments)
+        {
+            return Conflict(new
+            {
+                message = "This event has participants enrolled and cannot be deleted. " +
+                          "Set its status to Cancelled instead."
+            });
+        }
+
+        _context.Events.Remove(raceEvent);
+        await _context.SaveChangesAsync(); 
+
+        return NoContent();
+    }
 }
