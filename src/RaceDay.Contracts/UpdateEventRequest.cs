@@ -16,8 +16,8 @@ public class UpdateEventRequest
     public DateOnly EventDate { get; set; }
 
     // Use the typeof(decimal) overload so the bounds are parsed as decimals rather than doubles. 
-    [Range(typeof(decimal), "0.1", "999.99",
-        ErrorMessage = "Distance must be between 0.1 and 999.99 km.")]
+    [Range(0.1, 999.99,
+    ErrorMessage = "Distance must be between 0.1 and 999.99 km.")]
     public decimal DistanceKm { get; set; }
 
     // Must match the same allowed values as the Event entity
