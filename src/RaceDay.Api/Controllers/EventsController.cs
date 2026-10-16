@@ -109,8 +109,7 @@ public class EventsController : ControllerBase
         return Ok(raceEvent);
     }
     /// <summary>
-    /// Creates a new event. The venue and organiser must already exist,
-    /// and the organiser must hold the Organiser role.
+    /// Creates a new event. The venue and organiser must already exist, and the organiser must hold the Organiser role.
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -174,5 +173,67 @@ public class EventsController : ControllerBase
             nameof(GetEvent),
             new { id = raceEvent.EventId },
             new { raceEvent.EventId, raceEvent.EventName });
+    }
+    /// <summary>
+    /// Updates an existing event. Only the organiser who owns the event may change it, and the event must still exist.
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateEvent(
+        int id,
+        [FromBody] UpdateEventRequest request)
+    {
+       
+        // EF Core must track this entity so that SaveChangesAsync can work out which columns changed and build the UPDATE statement.
+        var raceEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.EventId == id);
+
+        if (raceEvent is null)
+        {
+            return NotFound(new { message = $"No event was found with ID {id}." });
+        }
+
+        // Ownership check: the organiser sending the request must be the one who owns the event.
+        if (raceEvent.OrganiserId != request.OrganiserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "Only the organiser who created this event may update it." });
+        }
+
+        // A Draft or Open event may not be moved into the past.
+        var isUpcoming = raceEvent.Status is "Draft" or "Open";
+        if (isUpcoming && request.EventDate < DateOnly.FromDateTime(DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(request.EventDate),
+                "The event date may not be moved into the past.");
+            return ValidationProblem(ModelState);
+        }
+
+        // The venue may have been changed, so confirm the new one exists
+        var venueExists = await _context.Venues
+            .AnyAsync(v => v.VenueId == request.VenueId);
+
+        if (!venueExists)
+        {
+            ModelState.AddModelError(nameof(request.VenueId),
+                $"No venue was found with ID {request.VenueId}.");
+            return ValidationProblem(ModelState);
+        }
+
+        // Overwrite the tracked entity's values. EF Core compares these agains the originals it loaded and writes only the columns that actually changed.
+        raceEvent.EventName = request.EventName.Trim();
+        raceEvent.Description = request.Description?.Trim();
+        raceEvent.EventDate = request.EventDate;
+        raceEvent.DistanceKm = request.DistanceKm;
+        raceEvent.EventType = request.EventType;
+        raceEvent.VenueId = request.VenueId;
+        raceEvent.Status = request.Status;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
