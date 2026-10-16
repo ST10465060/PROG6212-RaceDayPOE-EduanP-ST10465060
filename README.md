@@ -235,6 +235,8 @@ live server response, rather than the generated documentation table.
 ## CI/CD Status
 ![CI/CD green build](docs/cicd-green-build.png)
 
+![CI/CD green build](docs/cicd-green-build-Part2.png)
+
 ## Video Demonstration
 [RaceDay Part 1 walkthrough (unlisted)](https://www.youtube.com/watch?v=snwTFKWFB7E)
 
