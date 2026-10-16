@@ -15,13 +15,14 @@ public class CreateEventRequest
     public DateOnly EventDate { get; set; }
 
     [Required]
-    [Range(0.1, 999.99, ErrorMessage = "Distance must be between 0.1 and 999.99 km.")]
+    [Range(typeof(decimal), "0.1", "999.99",
+    ErrorMessage = "Distance must be between 0.1 and 999.99 km.")]
     public decimal DistanceKm { get; set; }
 
     // Must be one of Run, Walk or Cycle
     [Required]
     [RegularExpression("^(Run|Walk|Cycle)$",
-        ErrorMessage = "Event type must be Run, Walk or Cycle.")]
+    ErrorMessage = "Event type must be Run, Walk or Cycle.")]
     public string EventType { get; set; } = string.Empty;
 
     [Required]
