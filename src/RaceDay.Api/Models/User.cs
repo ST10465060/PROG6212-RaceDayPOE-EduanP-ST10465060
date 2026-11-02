@@ -27,6 +27,11 @@ public class User
     [Required, MaxLength(20)]
     public string Role { get; set; } = string.Empty;
 
+    // URL of the user's profile picture in blob storage. Nullable so that
+    // existing accounts created before this feature still load fine.
+    [MaxLength(400)]
+    public string? ProfilePictureUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // An organiser owns many events, a participant has many enrolments

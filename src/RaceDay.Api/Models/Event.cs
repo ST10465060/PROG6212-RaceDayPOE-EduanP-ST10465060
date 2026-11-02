@@ -31,6 +31,11 @@ public class Event
     [Required, MaxLength(20)]
     public string Status { get; set; } = "Draft";
 
+    // URL of the banner image stored in blob storage.
+    // Nullable because an event is perfectly valid without a banner yet.
+    [MaxLength(400)]
+    public string? BannerImageUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Category> Categories { get; set; } = new List<Category>();
