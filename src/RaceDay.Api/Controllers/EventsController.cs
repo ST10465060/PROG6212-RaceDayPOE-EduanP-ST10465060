@@ -2,7 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using RaceDay.Api.Models;
+using RaceDay.Api.Services; // Part 3
 using RaceDay.Contracts.Events;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RaceDay.Api.Controllers;
 
@@ -11,10 +15,14 @@ namespace RaceDay.Api.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly RaceDayDbContext _context;
+    private readonly IBlobStorageService _blobStorage;
 
-    public EventsController(RaceDayDbContext context)
+    // Both services are handed in by the DI container, which is why they were
+    // registered in Program.cs. The controller never creates them itself.
+    public EventsController(RaceDayDbContext context, IBlobStorageService blobStorage)
     {
         _context = context;
+        _blobStorage = blobStorage;
     }
 
     /// <summary>
@@ -285,5 +293,61 @@ public class EventsController : ControllerBase
         await _context.SaveChangesAsync(); 
 
         return NoContent();
+    
+    }
+
+    /// <summary>
+    /// Uploads or replaces the banner image for an event.
+    /// The MVC front end posts the file here; it never speaks to Azure itself.
+    /// </summary>
+    [HttpPost("{id:int}/banner")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadBanner(int id, IFormFile file)
+    {
+        var raceEvent = await _context.Events.FirstOrDefaultAsync(e => e.EventId == id);
+
+        if (raceEvent is null)
+        {
+            return NotFound(new { message = $"No event was found with ID {id}." });
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { message = "No file was uploaded." });
+        }
+
+        // Only allow real image types. Checking the extension keeps someone
+        // from uploading an executable and having it served back to browsers.
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+        if (!allowed.Contains(extension))
+        {
+            return BadRequest(new { message = "Only JPG, PNG or WEBP images are allowed." });
+        }
+
+        // Cap the size at 5 MB so one huge upload cannot fill the container.
+        const long maxBytes = 5 * 1024 * 1024;
+        if (file.Length > maxBytes)
+        {
+            return BadRequest(new { message = "The image may not be larger than 5 MB." });
+        }
+
+        // Remove the old banner first, otherwise replaced images pile up
+        // in storage forever and nothing ever points at them again.
+        if (!string.IsNullOrWhiteSpace(raceEvent.BannerImageUrl))
+        {
+            await _blobStorage.DeleteAsync(raceEvent.BannerImageUrl);
+        }
+
+        await using var stream = file.OpenReadStream();
+        var url = await _blobStorage.UploadAsync(stream, file.FileName, file.ContentType);
+
+        raceEvent.BannerImageUrl = url;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { bannerImageUrl = url });
     }
 }
