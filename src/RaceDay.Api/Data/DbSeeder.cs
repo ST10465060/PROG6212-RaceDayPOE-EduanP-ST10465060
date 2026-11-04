@@ -1,4 +1,5 @@
 ﻿using RaceDay.Api.Models;
+using RaceDay.Api.Services; // part 3 
 
 namespace RaceDay.Api.Data;
 
@@ -13,12 +14,18 @@ public static class DbSeeder
             return;
         }
 
+        // Every seeded account uses the same demo password so that anyone marking
+        // this project can sign in straight after cloning it. Hashed here rather
+        // than hardcoded, otherwise PasswordHasher.Verify would never match.
+        var demoPassword = PasswordHasher.Hash("Password123!");
+
         var organiser = new User
         {
             FirstName = "Thandi",
             LastName = "Mokoena",
             Email = "thandi.mokoena@racedaysa.co.za",
-            PasswordHash = "SEEDED_PLACEHOLDER_HASH",
+            PasswordHash = demoPassword, // part 3 - shared demo password
+            // PasswordHash = "SEEDED_PLACEHOLDER_HASH", // part 2 
             PhoneNumber = "0823456789",
             DateOfBirth = new DateOnly(1988, 4, 17),
             Role = "Organiser"
@@ -29,7 +36,8 @@ public static class DbSeeder
             FirstName = "Sipho",
             LastName = "Naidoo",
             Email = "sipho.naidoo@example.com",
-            PasswordHash = "SEEDED_PLACEHOLDER_HASH",
+            PasswordHash = demoPassword, // part 3 - shared demo password
+            // PasswordHash = "SEEDED_PLACEHOLDER_HASH", // part 2
             PhoneNumber = "0719876543",
             DateOfBirth = new DateOnly(1996, 11, 2),
             Role = "Participant"
