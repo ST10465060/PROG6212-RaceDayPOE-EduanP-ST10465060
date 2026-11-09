@@ -1,0 +1,89 @@
+﻿@model List<RaceDay.Contracts.Enrolments.MyEnrolmentDto>
+@{
+    ViewData["Title"] = "My races";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My races</h2>
+    <a asp-controller="Races" asp-action="Index" class="btn btn-primary">Find a race</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        You have not entered any races yet. Use the button above to find one.
+    </div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Race</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Distance</th>
+                <th>Fee</th>
+                <th>Status</th>
+                <th>Result</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Races" asp-action="Details"
+                           asp-route-id="@entry.EventId">@entry.EventName</a>
+                    </td>
+                    <td>@entry.EventDate.ToString("dd MMM yyyy")</td>
+                    <td>@entry.CategoryName</td>
+                    <td>@entry.DistanceKm.ToString("0.##") km</td>
+                    <td>R @entry.EntryFee.ToString("0.00")</td>
+                    <td>
+                        @{
+                            var badge = entry.Status switch
+                            {
+                                "Confirmed" => "bg-success",
+                                "Pending" => "bg-warning text-dark",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @badge">@entry.Status</span>
+                    </td>
+                    <td>
+                        @* FinishTime stays null until the organiser capture a result. *@
+                        @if (entry.FinishTime is not null)
+                        {
+                            <text>@entry.FinishTime</text>
+                            @if (entry.Position is not null)
+                            {
+                                <span class="text-muted">(position @entry.Position)</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not yet available</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        @* Only let someone pull out of a race that has not happened yet. *@
+                        @if (entry.EventDate > DateOnly.FromDateTime(DateTime.Today)
+                             && entry.Status != "Cancelled")
+                        {
+                            <form asp-action="Withdraw" asp-route-id="@entry.EnrolmentId"
+                                  method="post"
+                                  onsubmit="return confirm('Withdraw from @entry.EventName?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    Withdraw
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
