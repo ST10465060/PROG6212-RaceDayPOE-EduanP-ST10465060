@@ -34,8 +34,7 @@
 }
 else if (!Context.Session.IsLoggedIn())
 {
-    @* Show the categories, but make signing in the obvious next step.
-       Hiding them entirely would make the page look empty for no reason. *@
+    @* Show the categories, but make signing in the obvious next step. *@
     <div class="alert alert-info">
         <a asp-controller="Account" asp-action="Login"
            asp-route-returnUrl="@Context.Request.Path">Sign in</a>
@@ -51,8 +50,9 @@ else if (!Context.Session.IsLoggedIn())
         <thead>
             <tr>
                 <th>Category</th>
+                <th>Distance</th>
                 <th>Entry fee</th>
-                <th>Capacity</th>
+                <th>Spaces left</th>
                 <th></th>
             </tr>
         </thead>
@@ -61,19 +61,35 @@ else if (!Context.Session.IsLoggedIn())
             {
                 <tr>
                     <td>@category.CategoryName</td>
+                    <td>@category.DistanceKm.ToString("0.##") km</td>
                     <td>R @category.EntryFee.ToString("0.00")</td>
-                    <td>@category.Capacity</td>
+                    <td>
+                        @* SpacesRemaining is worked out by the API *@
+                        @if (category.SpacesRemaining <= 0)
+                        {
+                            <span class="badge bg-danger">Full</span>
+                        }
+                        else
+                        {
+                            <text>@category.SpacesRemaining of @category.MaxParticipants</text>
+                        }
+                    </td>
                     <td class="text-end">
                         @if (Context.Session.IsParticipant())
                         {
-                            @* An entry changes data, so POST with a token.
-                               Organisers do not see this button, they enter
-                               races through their own participant account. *@
-                            <form asp-controller="Enrolments" asp-action="Enrol" method="post">
-                                <input type="hidden" name="categoryId" value="@category.CategoryId" />
-                                <input type="hidden" name="eventId" value="@Model.EventId" />
-                                <button type="submit" class="btn btn-sm btn-success">Enter</button>
-                            </form>
+                            @if (category.SpacesRemaining <= 0)
+                            {
+                             
+                                <button class="btn btn-sm btn-secondary" disabled>Full</button>
+                            }
+                            else
+                            {
+                                <form asp-controller="Enrolments" asp-action="Enrol" method="post">
+                                    <input type="hidden" name="categoryId" value="@category.CategoryId" />
+                                    <input type="hidden" name="eventId" value="@Model.EventId" />
+                                    <button type="submit" class="btn btn-sm btn-success">Enter</button>
+                                </form>
+                            }
                         }
                     </td>
                 </tr>
