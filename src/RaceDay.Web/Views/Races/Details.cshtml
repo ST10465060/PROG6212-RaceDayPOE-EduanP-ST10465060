@@ -1,0 +1,85 @@
+﻿@using RaceDay.Web.Services
+@model RaceDay.Contracts.Events.EventDetailDto
+@{
+    ViewData["Title"] = Model.EventName;
+}
+
+<h2>@Model.EventName</h2>
+<p class="text-muted">Organised by @Model.OrganiserName</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Date</dt>
+    <dd class="col-sm-9">@Model.EventDate.ToString("dddd, dd MMMM yyyy")</dd>
+
+    <dt class="col-sm-3">Type and distance</dt>
+    <dd class="col-sm-9">@Model.EventType over @Model.DistanceKm.ToString("0.##") km</dd>
+
+    <dt class="col-sm-3">Venue</dt>
+    <dd class="col-sm-9">@Model.VenueName, @Model.City, @Model.Province</dd>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <dt class="col-sm-3">About this race</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+    }
+</dl>
+
+<h4 class="mt-4">Choose a category</h4>
+
+@if (!Model.Categories.Any())
+{
+    <div class="alert alert-warning">
+        The organiser has not added any categories to this race yet.
+    </div>
+}
+else if (!Context.Session.IsLoggedIn())
+{
+    @* Show the categories, but make signing in the obvious next step.
+       Hiding them entirely would make the page look empty for no reason. *@
+    <div class="alert alert-info">
+        <a asp-controller="Account" asp-action="Login"
+           asp-route-returnUrl="@Context.Request.Path">Sign in</a>
+        or
+        <a asp-controller="Account" asp-action="Register">create an account</a>
+        to enter this race.
+    </div>
+}
+
+@if (Model.Categories.Any())
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Entry fee</th>
+                <th>Capacity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in Model.Categories)
+            {
+                <tr>
+                    <td>@category.CategoryName</td>
+                    <td>R @category.EntryFee.ToString("0.00")</td>
+                    <td>@category.Capacity</td>
+                    <td class="text-end">
+                        @if (Context.Session.IsParticipant())
+                        {
+                            @* An entry changes data, so POST with a token.
+                               Organisers do not see this button, they enter
+                               races through their own participant account. *@
+                            <form asp-controller="Enrolments" asp-action="Enrol" method="post">
+                                <input type="hidden" name="categoryId" value="@category.CategoryId" />
+                                <input type="hidden" name="eventId" value="@Model.EventId" />
+                                <button type="submit" class="btn btn-sm btn-success">Enter</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-action="Index" class="btn btn-link px-0">Back to all races</a>

@@ -1,0 +1,63 @@
+﻿@model List<RaceDay.Contracts.Events.EventSummaryDto>
+@{
+    ViewData["Title"] = "Find a race";
+}
+
+<h2 class="mb-3">Find a race</h2>
+
+@* GET, not POST. A search should be bookmarkable and refreshable
+   without the browser warning about resubmitting a form. *@
+<form asp-action="Index" method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input name="search" value="@ViewData["Search"]" class="form-control"
+               placeholder="Search by event, venue or city" />
+    </div>
+    <div class="col-md-3">
+        <select name="type" class="form-select">
+            <option value="">All event types</option>
+            <option value="Run" selected="@(ViewData["Type"] as string == "Run")">Run</option>
+            <option value="Walk" selected="@(ViewData["Type"] as string == "Walk")">Walk</option>
+            <option value="Cycle" selected="@(ViewData["Type"] as string == "Cycle")">Cycle</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No open races match what you are looking for. Try clearing the filters.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var ev in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@ev.EventName</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            @ev.EventDate.ToString("ddd, dd MMM yyyy")
+                        </h6>
+                        <p class="card-text mb-1">
+                            <span class="badge bg-primary">@ev.EventType</span>
+                            <span class="badge bg-secondary">@ev.DistanceKm.ToString("0.##") km</span>
+                        </p>
+                        <p class="card-text text-muted small">
+                            @ev.VenueName, @ev.City
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white border-0">
+                        <a asp-action="Details" asp-route-id="@ev.EventId"
+                           class="btn btn-outline-primary btn-sm">View and enter</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
