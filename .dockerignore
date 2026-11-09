@@ -1,0 +1,27 @@
+# Build output. Copying these in would bloat the context and can
+# cause obj/ conflicts between the host and the container.
+**/bin/
+**/obj/
+**/out/
+
+# Local tooling and IDE state
+.vs/
+.vscode/
+.idea/
+**/*.user
+
+# Source control
+.git/
+.gitignore
+.github/
+
+# Docker's own files
+**/Dockerfile*
+**/docker-compose*
+.dockerignore
+
+# Documentation and secrets
+README.md
+docs/
+**/appsettings.Development.json
+**/*.pfx
