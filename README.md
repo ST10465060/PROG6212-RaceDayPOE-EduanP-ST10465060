@@ -564,6 +564,8 @@ reaches the browser.
 
 ![CI/CD green build](docs/cicd-green-build-Part2.png)
 
+![CI/CD green build](docs/cicd-green-build-Part3.png) 
+
 ## Video Demonstration
 [RaceDay Part 1 walkthrough (unlisted)](https://www.youtube.com/watch?v=snwTFKWFB7E
 
