@@ -60,21 +60,4 @@ public class EnrolmentsController : Controller
         return RedirectToAction(nameof(MyRaces));
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Withdraw(int id)
-    {
-        var result = await _api.DeleteAsync($"api/enrolments/{id}");
-
-        if (!result.Success)
-        {
-            TempData["Error"] = result.ErrorMessage ?? "Your entry could not be withdrawn.";
-        }
-        else
-        {
-            TempData["Success"] = "You have been withdrawn from that race.";
-        }
-
-        return RedirectToAction(nameof(MyRaces));
-    }
 }
