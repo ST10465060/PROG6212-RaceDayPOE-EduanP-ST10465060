@@ -12,6 +12,8 @@ public class EventDetailDto
     public string EventType { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 
+    public string? BannerImageUrl { get; set; }
+
     public string VenueName { get; set; } = string.Empty;
     public string? City { get; set; }
     public string? Province { get; set; }

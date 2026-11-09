@@ -91,6 +91,7 @@ public class EventsController : ControllerBase
                 DistanceKm = e.DistanceKm,
                 EventType = e.EventType,
                 Status = e.Status,
+                BannerImageUrl = e.BannerImageUrl,
                 VenueName = e.Venue!.VenueName,
                 City = e.Venue.City,
                 Province = e.Venue.Province,
