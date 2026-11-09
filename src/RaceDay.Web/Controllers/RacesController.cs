@@ -21,10 +21,10 @@ public class RacesController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(string? search, string? type)
     {
-        // Only Open events belong on the public list.
-        var events = await _api.GetListAsync<EventSummaryDto>("api/events?status=Open");
+        // "Published" is the word the API and database use for an event that
+        // is open to the public. Draft and Cancelled stay off this list.
+        var events = await _api.GetListAsync<EventSummaryDto>("api/events?status=Published");
 
-        // Filtering happens here rather than in the API because the list is small 
         if (!string.IsNullOrWhiteSpace(search))
         {
             events = events
