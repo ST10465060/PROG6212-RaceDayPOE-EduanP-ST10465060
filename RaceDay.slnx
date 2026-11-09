@@ -6,4 +6,5 @@
   <Folder Name="/tests/">
     <Project Path="tests/RaceDay.Api.Tests/RaceDay.Api.Tests.csproj" />
   </Folder>
+  <Project Path="src/RaceDay.Web/RaceDay.Web.csproj" Id="21401adb-08bc-4753-8568-0ea6fe45f63d" />
 </Solution>
