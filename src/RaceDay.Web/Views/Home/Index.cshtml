@@ -1,8 +1,22 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<RaceDay.Contracts.Venues.VenueDto>
+
+@{
+    ViewData["Title"] = "Connection test";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1>RaceDay</h1>
+
+@if (Model.Any())
+{
+    <p class="text-success">Connected to the API. @Model.Count venue(s) returned.</p>
+    <ul>
+        @foreach (var venue in Model)
+        {
+            <li>@venue.VenueName — @venue.City (@venue.EventCount events)</li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-danger">No data came back. Is the API running?</p>
+}
