@@ -218,4 +218,40 @@ public class EventsController : Controller
 
         return RedirectToAction(nameof(Manage));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadBanner(int id, IFormFile? banner)
+    {
+        if (banner is null || banner.Length == 0)
+        {
+            TempData["Error"] = "Please choose an image before uploading.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // The API validates type and size properly, this is just a quick
+        // check so an obvious mistake does not cost a round trip.
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(banner.FileName).ToLowerInvariant();
+
+        if (!allowed.Contains(extension))
+        {
+            TempData["Error"] = "Only JPG, PNG or WEBP images are allowed.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // OpenReadStream gives a stream over the uploaded file without
+        // loading the whole thing into memory first.
+        await using var stream = banner.OpenReadStream();
+
+        var result = await _api.PostFileAsync(
+            $"api/events/{id}/banner", stream, banner.FileName, banner.ContentType);
+
+        TempData[result.Success ? "Success" : "Error"] = result.Success
+            ? "The banner image has been uploaded."
+            : result.ErrorMessage ?? "The image could not be uploaded.";
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
 }
