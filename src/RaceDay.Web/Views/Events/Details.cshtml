@@ -1,0 +1,127 @@
+﻿@model RaceDay.Contracts.Events.EventDetailDto
+@{
+    ViewData["Title"] = Model.EventName;
+}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h2 class="mb-1">@Model.EventName</h2>
+        @* The status badge matters more on the organiser's side than the
+           participant's, because Draft is the thing they need to notice. *@
+        @{
+            var statusBadge = Model.Status switch
+            {
+                "Published" => "bg-success",
+                "Draft" => "bg-secondary",
+                "Cancelled" => "bg-danger",
+                _ => "bg-light text-dark"
+            };
+        }
+        <span class="badge @statusBadge">@Model.Status</span>
+    </div>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.EventId" class="btn btn-primary">Edit event</a>
+        <a asp-action="Manage" class="btn btn-outline-secondary">Back to my events</a>
+    </div>
+</div>
+
+@if (Model.Status == "Draft")
+{
+    <div class="alert alert-warning">
+        This event is still a draft, so it does not appear on the public race
+        list. Edit it and set the status to Published when you are ready.
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.BannerImageUrl))
+{
+    <img src="@Model.BannerImageUrl" alt="@Model.EventName banner"
+         class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover; width: 100%;" />
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-title">Banner image</h6>
+
+        @* enctype is essential. Without it the browser sends only the
+           file name as plain text and the API receives nothing. *@
+        <form asp-action="UploadBanner" asp-route-id="@Model.EventId"
+              method="post" enctype="multipart/form-data" class="row g-2">
+            <div class="col-md-8">
+                <input type="file" name="banner" accept=".jpg,.jpeg,.png,.webp"
+                       class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary">
+                    @(string.IsNullOrWhiteSpace(Model.BannerImageUrl) ? "Upload" : "Replace")
+                </button>
+            </div>
+        </form>
+        <div class="form-text mt-2">JPG, PNG or WEBP, up to 5 MB.</div>
+    </div>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Date</dt>
+    <dd class="col-sm-9">@Model.EventDate.ToString("dddd, dd MMMM yyyy")</dd>
+
+    <dt class="col-sm-3">Type and distance</dt>
+    <dd class="col-sm-9">@Model.EventType over @Model.DistanceKm.ToString("0.##") km</dd>
+
+    <dt class="col-sm-3">Venue</dt>
+    <dd class="col-sm-9">@Model.VenueName, @Model.City, @Model.Province</dd>
+
+    <dt class="col-sm-3">Organiser</dt>
+    <dd class="col-sm-9">@Model.OrganiserName</dd>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+    }
+</dl>
+
+<h4 class="mt-4">Categories</h4>
+
+@if (!Model.Categories.Any())
+{
+    <div class="alert alert-info">
+        This event has no categories yet, so nobody can enter it. Add at
+        least one before you publish.
+    </div>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Distance</th>
+                <th>Entry fee</th>
+                <th>Entered</th>
+                <th>Spaces left</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in Model.Categories)
+            {
+                <tr>
+                    <td>@category.CategoryName</td>
+                    <td>@category.DistanceKm.ToString("0.##") km</td>
+                    <td>R @category.EntryFee.ToString("0.00")</td>
+                    <td>@category.EnrolledCount of @category.MaxParticipants</td>
+                    <td>
+                        @if (category.SpacesRemaining <= 0)
+                        {
+                            <span class="badge bg-danger">Full</span>
+                        }
+                        else
+                        {
+                            <text>@category.SpacesRemaining</text>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
