@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="text-center py-5">
+    <h2>Access denied</h2>
+    <p class="lead">
+        Your account is registered as a <strong>@ViewData["Role"]</strong>,
+        and this page is not available to that role.
+    </p>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back to home</a>
+</div>
