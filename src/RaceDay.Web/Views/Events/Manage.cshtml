@@ -1,0 +1,75 @@
+﻿@model List<RaceDay.Contracts.Events.EventSummaryDto>
+@{
+    ViewData["Title"] = "My events";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My events</h2>
+    <a asp-action="Create" class="btn btn-primary">Create an event</a>
+</div>
+
+@if (!Model.Any())
+{
+    
+    <div class="alert alert-info">
+        You have not created any events yet. Use the button above to add your first one.
+    </div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Distance</th>
+                <th>Venue</th>
+                <th>Categories</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ev in Model)
+            {
+                <tr>
+                    <td>@ev.EventName</td>
+                    <td>@ev.EventDate.ToString("dd MMM yyyy")</td>
+                    <td>@ev.EventType</td>
+                    <td>@ev.DistanceKm.ToString("0.##") km</td>
+                    <td>@ev.VenueName, @ev.City</td>
+                    <td>@ev.CategoryCount</td>
+                    <td>
+                        
+                        @{
+                            var badge = ev.Status switch
+                            {
+                                "Open" => "bg-success",
+                                "Draft" => "bg-secondary",
+                                "Closed" => "bg-warning text-dark",
+                                "Completed" => "bg-primary",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @badge">@ev.Status</span>
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@ev.EventId"
+                           class="btn btn-sm btn-outline-secondary">View</a>
+                        <a asp-action="Edit" asp-route-id="@ev.EventId"
+                           class="btn btn-sm btn-outline-primary">Edit</a>
+
+                        
+                        <form asp-action="Delete" asp-route-id="@ev.EventId"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Delete @ev.EventName? This cannot be undone.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
