@@ -1,0 +1,55 @@
+# Part 3 CI pipeline.
+# Runs on every push and pull request to the part-3 branch so that a broken
+# build is caught in GitHub rather than on the marker's machine.
+name: Part 3 CI
+
+on:
+  push:
+    branches: [ part-3 ]
+  pull_request:
+    branches: [ part-3 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pull the repository onto the runner.
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # Install the .NET 8 SDK. The runner does not have our exact version
+      # pinned by default, so we ask for it explicitly.
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Restore NuGet packages for every project in the solution.
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Build all three projects. --no-restore avoids repeating the step above.
+      # A compile error in the API, Contracts or Web project fails the run.
+      - name: Build the solution
+        run: dotnet build --no-restore --configuration Release
+
+      # Confirms the MVC project publishes cleanly, which is the same operation
+      # the Dockerfile performs inside its build stage.
+      - name: Publish the web application
+        run: dotnet publish src/RaceDay.Web/RaceDay.Web.csproj --no-build --configuration Release --output ./publish
+
+  # A separate job so that a Docker failure is visibly distinct from a
+  # compile failure in the Actions tab.
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # Builds the exact image described in the README. We do not push it
+      # anywhere; proving it builds is the point.
+      - name: Build the Docker image
+        run: docker build -t raceday-web -f src/RaceDay.Web/Dockerfile .
