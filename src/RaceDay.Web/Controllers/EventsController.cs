@@ -200,12 +200,15 @@ public class EventsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _api.DeleteAsync($"api/events/{id}");
+        var organiserId = HttpContext.Session.GetUserId()!.Value;
+
+        // The API checks ownership itself and returns 403 if this organiser
+        // does not own the event, so the id has to travel with the request.
+        var result = await _api.DeleteAsync($"api/events/{id}?organiserId={organiserId}");
 
         if (!result.Success)
         {
-            // The API blocks deleting an event that already has entries,
-            // so show its reason rather than a generic failure.
+            // Covers the 409 for an event that already has entrants.
             TempData["Error"] = result.ErrorMessage ?? "The event could not be deleted.";
         }
         else
