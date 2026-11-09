@@ -93,6 +93,44 @@ public class ApiClient
     }
 
     /// <summary>
+    /// Uploads a file as multipart form data. JSON cannot carry binary
+    /// content, so this one cannot reuse PostAsync.
+    /// </summary>
+    public async Task<ApiResult<bool>> PostFileAsync(
+        string url, Stream fileStream, string fileName, string contentType)
+    {
+        try
+        {
+            // Disposed at the end of the method so the stream and the
+            // boundary buffers are released even if the request fails.
+            using var form = new MultipartFormDataContent();
+            using var content = new StreamContent(fileStream);
+
+            content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+
+            // "file" must match the IFormFile parameter name on the API
+            // action, that is how model binding finds it.
+            form.Add(content, "file", fileName);
+
+            var response = await _http.PostAsync(url, form);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return ApiResult<bool>.Ok(true);
+            }
+
+            var error = await response.Content.ReadAsStringAsync();
+            return ApiResult<bool>.Fail(CleanError(error, response.StatusCode));
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "File upload to {Url} failed", url);
+            return ApiResult<bool>.Fail("The service is unavailable. Please try again shortly.");
+        }
+    }
+
+    /// <summary>
     /// For updates, where the API replies 204 with no body.
     /// </summary>
     public async Task<ApiResult<bool>> PutAsync<TRequest>(string url, TRequest body)
