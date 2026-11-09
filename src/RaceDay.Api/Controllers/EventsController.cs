@@ -31,8 +31,10 @@ public class EventsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<EventSummaryDto>>> GetEvents(
-        [FromQuery] string? eventType,
-        [FromQuery] string? city)
+    [FromQuery] string? eventType,
+    [FromQuery] string? city,
+    [FromQuery] int? organiserId,   // added: an organiser's own events
+    [FromQuery] string? status)     // added: the public "Published only" list
     {
         // AsNoTracking because nothing here is going to be updated
         var query = _context.Events
